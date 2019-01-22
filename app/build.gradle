@@ -1,0 +1,82 @@
+apply plugin: 'com.android.application'
+
+apply plugin: 'kotlin-android'
+
+apply plugin: 'kotlin-android-extensions'
+
+apply plugin: 'com.tlz.androidreinforceplugin'
+
+android {
+    compileSdkVersion 28
+    defaultConfig {
+        applicationId "com.tlz.androidreinforceplugin.example"
+        minSdkVersion 21
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        manifestPlaceholders = [UMENG_CHANNEL: "默认"]
+    }
+
+    signingConfigs {
+        release {
+            storeFile file('test.keystore')
+            storePassword '123456'
+            keyAlias 'test'
+            keyPassword '123456'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation 'androidx.appcompat:appcompat:1.1.0-alpha01'
+    implementation 'androidx.core:core-ktx:1.1.0-alpha03'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'androidx.test:runner:1.1.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
+}
+
+//加载properties 这里只是加载我本地配置的账号 不能对外公开 嘿嘿
+def properties = new Properties()
+def inputStream = project.rootProject.file('local.properties').newDataInputStream()
+properties.load(inputStream)
+
+AndroidReinForce {
+    //加固类型 四种方式 360 le all query
+    reinforceType = "360"
+
+    reinforce360 {
+        // 支持该加固
+        support = true
+        // 配置自己的360账号
+        user = properties.getProperty("USER_360")
+        // 配置自己的360账号密码
+        pass = properties.getProperty("PASS_360")
+        // 配置自己的360加固文件路径
+        path = file("jiagu/jiagu.jar").absolutePath
+        mulpkg = true
+        mulpkgConfigPath = file("mulpkg_config.txt").absolutePath
+    }
+    reinforceLe {
+        // 支持该加固
+        support = true
+        // 配置自己的乐固加固文件路径
+        path = new File("mg-shield.jar").absolutePath
+        // 配置自己的乐固secretId
+        secretId = "i do not known"
+        // 配置自己的乐固secretKey
+        secretKey = "i do not known"
+    }
+}

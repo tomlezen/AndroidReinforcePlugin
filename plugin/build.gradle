@@ -1,0 +1,24 @@
+apply plugin: 'groovy'
+apply plugin: 'kotlin'
+apply plugin: 'maven'
+
+group = "com.tlz.androidreinforce"
+version = "1.0.12"
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    implementation gradleApi()
+    implementation "com.android.tools.build:gradle:3.3.0"
+}
+
+sourceCompatibility = "7"
+targetCompatibility = "7"
+
+uploadArchives{
+    repositories {
+        mavenDeployer {
+            repository(url: uri("$buildDir/repo"))
+        }
+    }
+}
