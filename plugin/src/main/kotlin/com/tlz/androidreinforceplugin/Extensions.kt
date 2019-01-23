@@ -8,6 +8,7 @@ import org.gradle.api.Project
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
+import java.util.*
 
 /**
  * Created by Tomlezen.
@@ -70,20 +71,24 @@ fun String.doCommand() {
     read.close()
     val error = BufferedReader(InputStreamReader(process.errorStream))
     line = error.readLine()
+    var isError = false
     while (line != null) {
         println(line)
         line = error.readLine()
+        isError = true
     }
 //    process.waitFor()
     process.destroy()
+    // 如果出现错误直接抛出异常 终止执行
+    if (isError) throw Exception("cmd命令执行失败，$this")
 }
 
 /**
  * 获取签名.
  */
 val ApplicationVariant.keystore: AndroidReinforceTask.KeyStore
-    get() = with(signingConfig){
-        if (storeFile == null || !storeFile.exists()){
+    get() = with(signingConfig) {
+        if (storeFile == null || !storeFile.exists()) {
             throw IllegalArgumentException("您没有配置签名")
         }
         AndroidReinforceTask.KeyStore(storeFile.absolutePath, storePassword, keyAlias, keyPassword)
@@ -94,3 +99,26 @@ val ApplicationVariant.keystore: AndroidReinforceTask.KeyStore
  */
 val isWindowOs: Boolean
     get() = System.getProperty("os.name")?.toLowerCase() == "window"
+
+/**
+ * 获取项目local.properties文件的属性.
+ * @receiver Project
+ * @param key String
+ * @param default String
+ * @return String
+ */
+fun Project.getLocalProperty(key: String, default: String = ""): String =
+    Properties().also { p ->
+        p.load(rootProject.file("local.properties").inputStream())
+    }.getProperty(key, default)
+
+/**
+ * 删除文件.
+ * @receiver String
+ */
+fun String.deleteFile() {
+    val file = File(this)
+    if (file.exists()) {
+        file.delete()
+    }
+}

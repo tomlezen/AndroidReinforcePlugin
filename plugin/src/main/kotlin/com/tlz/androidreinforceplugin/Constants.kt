@@ -7,13 +7,13 @@ package com.tlz.androidreinforceplugin
  */
 object Constants {
     /** 签名文件路径. */
-    const val ENV_STORE_PATH = "KEY_STORE_PATH"
+    const val ENV_STORE_PATH = "STORE_PATH"
     /** 签名文件密码. */
-    const val ENV_STORE_PASS = "KEY_STORE_PASS"
+    const val ENV_STORE_PASS = "STORE_PASS"
     /** 签名文件别名. */
-    const val ENV_KEY_ALIAS = "KEY_KEY_ALIAS"
+    const val ENV_KEY_ALIAS = "KEY_ALIAS"
     /** 签名文件别名密码. */
-    const val ENV_KEY_PASS = "KEY_KEY_PASS"
+    const val ENV_KEY_PASS = "KEY_PASS"
 
     /** 安卓sdk路径环境变量. */
     const val ENV_ANDROID_HOME = "ANDROID_HOME"

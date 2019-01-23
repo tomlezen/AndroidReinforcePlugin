@@ -1,5 +1,6 @@
 package com.tlz.androidreinforceplugin.tasks
 
+import biz.Legu
 import com.tlz.androidreinforceplugin.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
@@ -37,6 +38,7 @@ open class AndroidReinforceTask : DefaultTask() {
             else -> log("disable reinforce")
         }
         log("******************AndroidReinforceTask End******************")
+        log("******************温馨提示：加固并签名的包请务必测试是否正常运行******************")
     }
 
     /**
@@ -55,11 +57,11 @@ open class AndroidReinforceTask : DefaultTask() {
                 reinforceExtension.reinforce360.support.toString()
             )?.toBoolean() ?: reinforceExtension.reinforce360.support)
         ) {
-            log("do not support 360 reinforce")
+            log("您设置不支持360加固")
             return
         }
 
-        log("==================360 Start")
+        log("==================360加固开始")
         // 检查360的环境以及参数.
         val jarPath = getProperty(
             Constants.Params.P_360_PATH,
@@ -131,9 +133,9 @@ open class AndroidReinforceTask : DefaultTask() {
                         "java -jar $jarPath -showmulpkg".doCommand()
                     }
                     "java -jar $jarPath -jiagu $apkPath $outApkPath${if (autoSign) " -autosign" else ""}${if (mulpkg) " -automulpkg" else ""}".doCommand()
-                } ?: log("not found 360 reinforce apk for ${appVariant.flavorName}")
-        } ?: log("not found 360 reinforce apk")
-        log("==================360 End")
+                } ?: log("没有找到需要360加固的apk: ${appVariant.flavorName}")
+        } ?: log("没有找到需要360加固的apk")
+        log("==================360加固 结束")
     }
 
     /**
@@ -155,12 +157,12 @@ open class AndroidReinforceTask : DefaultTask() {
             log("do not support le reinforce")
             return
         }
-        log("==================LE Start")
-        // 检查360的环境以及参数.
+        log("==================乐固 开始")
+        // 检查乐固的环境以及参数.
         val jarPath = getProperty(
             Constants.Params.P_LE_PATH,
             getEnv(Constants.ENV_LE_PATH, reinforceExtension.reinforceLe.path)
-        ).checkNull("缺少乐固路径: ${Constants.Params.P_LE_PATH}")
+        )
         val secretId =
             getProperty(
                 Constants.Params.P_LE_SECRET_ID,
@@ -191,15 +193,30 @@ open class AndroidReinforceTask : DefaultTask() {
                     // apk路径
                     val apkPath = apkFile.absolutePath
                     // apk所在的文件夹路径
-                    val outApkPath = File(apkFile.parentFile, "reinforce_360").absolutePath
+                    val outApkPath = File(apkFile.parentFile, "reinforce_le").let {
+                        if (!it.exists()) {
+                            it.mkdirs()
+                        }
+                        it.absolutePath
+                    }
 
                     // 执行加固操作
-                    "java -Dfile.encoding=utf-8 -jar $jarPath -sid $secretId -skey $secretKey -uploadPath $apkPath -downloadPath $outApkPath".doCommand()
 
-                    // 如果不是window环境 则执行加固操作
-                    if (!isWindowOs && autoSign) {
+                    // 如果没有设置jar路径 则使用内置
+                    if (jarPath.isNullOrBlank()) {
+                        val innerJarPath = Legu::class.java.protectionDomain.codeSource.location.file
+                        log("使用内置乐固jar包: $innerJarPath")
+                        "java -Dfile.encoding=utf-8 -jar $innerJarPath -sid $secretId -skey $secretKey -uploadPath $apkPath -downloadPath $outApkPath".doCommand()
+                    } else {
+                        "java -Dfile.encoding=utf-8 -jar $jarPath -sid $secretId -skey $secretKey -uploadPath $apkPath -downloadPath $outApkPath".doCommand()
+                    }
+
+                    if (autoSign) {
                         // android sdk 路径
-                        val androidHome = getEnv(Constants.ENV_ANDROID_HOME).checkNull("缺少android sdk环境变量")
+                        val androidHome = getEnv(
+                            Constants.ENV_ANDROID_HOME,
+                            project.getLocalProperty("sdk.dir")
+                        ).checkNull("缺少android sdk环境变量")
                         // 编译工具
                         val buildToolPath = File("$androidHome/build-tools").listFiles().last().absolutePath
                         // 签名工具路径
@@ -207,39 +224,31 @@ open class AndroidReinforceTask : DefaultTask() {
                         // 对齐工具路径
                         val zipalignPath = "$buildToolPath/zipalign"
                         val apkFileName = apkFile.nameWithoutExtension
-                        val leguFilePath = "${apkFileName}_legu.apk"
-                        val leguSignedFilePath = "${apkFileName}_legu_signed.apk"
-                        val zipFilePath = "${apkFileName}_le.apk"
+                        val leFilePath = "$outApkPath/${apkFileName}_legu.apk"
+                        val leSignedFilePath = "$outApkPath/${apkFileName}_le_signed.apk"
+                        val zipFilePath = "$outApkPath/${apkFileName}_le_align.apk"
 
-                        // 构建shell文件内容
-                        val shellString = StringBuilder()
-                        shellString.append("#!/bin/bash\n\n")
-                        shellString.append("echo \"------ sign start ------\"\n")
-//                        shellString.append(
-//                            "$signerPath sign --ks $storePath $leguSignedFilePath <<EOF\n" +
-//                                    "$storePassword\n" +
-//                                    "EOF"
-//                        )
-                        shellString.append("$signerPath sign --ks $storePath $leguSignedFilePath --ks-pass $storePassword --ks-key-alias $keyAlias --ks-pass $keyPass\n")
-                        shellString.append("echo \"------ sign finish ------\"\n")
-                        shellString.append("echo \"------ zipalign start ------\"\n")
-                        shellString.append("$zipalignPath -v 4 $leguSignedFilePath $zipFilePath\n")
-                        shellString.append("echo \"------ zipalign finish ------\"\n")
+                        // 删除存在文件.
+                        zipFilePath.deleteFile()
+                        leSignedFilePath.deleteFile()
 
-                        val shellFile = newShellFile(Constants.SHELL_FILE_NAME_LE)
-                        shellFile.writeText(shellString.toString())
-                        shellFile.doShell()
+                        log("------ 开始压缩对齐 ------")
+                        "$zipalignPath -v 4 $leFilePath $zipFilePath".doCommand()
+                        log("------ 开始签名 ------")
+                        "$signerPath sign --ks $storePath --ks-pass pass:$storePassword --ks-key-alias $keyAlias --key-pass pass:$keyPass $zipFilePath".doCommand()
+                        log("------ 完成签名 ------")
+
+                        // 重新命名该文件
+                        File(zipFilePath).renameTo(File(leSignedFilePath))
 
                         // 删除中间文件
-                        File(leguFilePath).delete()
-                        File(leguSignedFilePath).delete()
-                        log("auto sign completed")
-                    } else if (isWindowOs) {
-                        log("乐固暂时不支持window自动签名")
+                        leFilePath.deleteFile()
+                        zipFilePath.deleteFile()
+                        log("apk路径：$leSignedFilePath")
                     }
-                }
-        } ?: log("not found 360 reinforce apk")
-        log("==================LE End")
+                } ?: log("没有找到需要乐固加固的apk: ${appVariant.flavorName}")
+        } ?: log("没有找到需要乐固加固的apk")
+        log("==================乐固 结束")
     }
 
     /**

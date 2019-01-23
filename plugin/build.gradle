@@ -1,19 +1,38 @@
 apply plugin: 'groovy'
 apply plugin: 'kotlin'
 apply plugin: 'maven'
+apply plugin: 'com.novoda.bintray-release'
 
 group = "com.tlz.androidreinforce"
-version = "1.0.12"
+version = "1.0.0"
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    implementation 'com.android.tools.build:gradle:3.3.0'
     implementation gradleApi()
-    implementation "com.android.tools.build:gradle:3.3.0"
+    compile files('libs/ms-shield.jar')
 }
 
 sourceCompatibility = "7"
 targetCompatibility = "7"
+
+jar {
+    //删除缓存
+    new File(project.jar.archivePath as String).delete()
+
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    exclude 'META-INF/MANIFEST.MF'
+    exclude 'META-INF/LICENSE'
+    exclude 'META-INF/*.SF'
+    exclude 'META-INF/*.DSA'
+    exclude 'META-INF/*.RSA'
+
+    manifest {
+        attributes 'Main-Class': 'biz.Legu',
+                'Debugger-Version': project.version
+    }
+}
 
 uploadArchives{
     repositories {
@@ -21,4 +40,27 @@ uploadArchives{
             repository(url: uri("$buildDir/repo"))
         }
     }
+}
+
+buildscript{
+    tasks.withType(Javadoc) {
+        failOnError false
+        options{
+            encoding "UTF-8"
+            charSet 'UTF-8'
+            links "http://docs.oracle.com/javase/7/docs/api"
+        }
+    }
+}
+
+publish {
+    userOrg = parent.ext.userOrg
+    artifactId = parent.ext.artifactId
+    autoPublish = parent.ext.autoPublish
+    desc = parent.ext.desc
+    groupId = parent.ext.groupId
+    publishVersion = parent.ext.publishVersion
+    uploadName = parent.ext.uploadName
+    website = parent.ext.website
+    repoName = parent.ext.repoName
 }

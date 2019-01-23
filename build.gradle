@@ -10,17 +10,30 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:3.3.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "com.tlz.androidreinforce:plugin:1.0.12"
+        classpath "com.novoda:bintray-release:0.9"
+//        classpath "com.tlz.androidreinforce:plugin:1.0.19"
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
 }
 
 allprojects {
+    ext{
+        userOrg = "tomlezen"
+        repoName = "tools"
+        groupId = "com.tlz.tools"
+        artifactId = "reinforce"
+        uploadName = "AndroidReinforcePlugin"
+        packaging = "jar"
+        desc = ""
+        website = "https://github.com/tomlezen/AndroidReinforcePlugin"
+        gitUrl = "https://github.com/tomlezen/AndroidReinforcePlugin.git"
+        publishVersion = "1.0.0"
+        autoPublish = true
+    }
     repositories {
         google()
         jcenter()
-        
     }
 }
 
