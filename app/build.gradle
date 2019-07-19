@@ -4,7 +4,7 @@ apply plugin: 'kotlin-android'
 
 apply plugin: 'kotlin-android-extensions'
 
-//apply plugin: 'com.tlz.androidreinforceplugin'
+apply plugin: 'com.tlz.androidreinforceplugin'
 
 android {
     compileSdkVersion 28
@@ -35,6 +35,13 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
+    flavorDimensions "version"
+    productFlavors {
+        dev {
+
+        }
+    }
 }
 
 dependencies {
@@ -61,12 +68,14 @@ AndroidReinForce {
         // 支持该加固
         support = true
         // 配置自己的360账号
-        user = properties.getProperty("USER_360")
+        user = properties.getProperty("USER_360", "")
         // 配置自己的360账号密码
-        pass = properties.getProperty("PASS_360")
+        pass = properties.getProperty("PASS_360", "")
         // 配置自己的360加固文件路径
         path = file("jiagu/jiagu.jar").absolutePath
+        // 配置支持多渠道
         mulpkg = true
+        // 多渠道路径
         mulpkgConfigPath = file("mulpkg_config.txt").absolutePath
     }
     reinforceLe {
@@ -75,8 +84,8 @@ AndroidReinForce {
         // 配置自己的乐固加固文件路径 可以选择不配置使用默认内置的
 //        path = file("ms-shield.jar").absolutePath
         // 配置自己的乐固secretId
-        secretId = properties.getProperty("SECRET_ID")
+        secretId = properties.getProperty("SECRET_ID", "")
         // 配置自己的乐固secretKey
-        secretKey = properties.getProperty("SECRET_KEY")
+        secretKey = properties.getProperty("SECRET_KEY", "")
     }
 }

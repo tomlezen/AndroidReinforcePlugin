@@ -56,6 +56,10 @@ open class AndroidReinforceExtension {
         var path = ""
         /** 是否支持加固  默认都是不支持状态. */
         var support = false
+//        /** 加固文件输出路径. 为空则使用默认路径即原来apk路径下的reinforce_[reinforceType]. */
+//        var outputPath = ""
+//        /** 加固文件输出文件名. 为空则使用默认文件名： app-[flavors]-[buildType]-[reinforceType]-signed */
+//        var outputFileName = ""
     }
 
 }
