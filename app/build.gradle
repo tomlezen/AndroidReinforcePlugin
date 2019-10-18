@@ -4,7 +4,7 @@ apply plugin: 'kotlin-android'
 
 apply plugin: 'kotlin-android-extensions'
 
-//apply plugin: 'com.tlz.androidreinforceplugin'
+apply plugin: 'com.tlz.androidreinforceplugin'
 
 android {
     compileSdkVersion 28
@@ -55,7 +55,7 @@ properties.load(inputStream)
 
 AndroidReinForce {
     //加固类型 四种方式 360 le all query
-    reinforceType = ""
+    reinforceType = "le"
 
     reinforce360 {
         // 支持该加固

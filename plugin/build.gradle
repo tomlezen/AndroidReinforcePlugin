@@ -4,7 +4,7 @@ apply plugin: 'maven'
 apply plugin: 'com.novoda.bintray-release'
 
 group = "com.tlz.androidreinforce"
-version = "1.0.0"
+version = "1.0.1"
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')

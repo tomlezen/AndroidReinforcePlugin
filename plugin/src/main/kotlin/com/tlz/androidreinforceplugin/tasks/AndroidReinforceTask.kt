@@ -5,6 +5,7 @@ import com.tlz.androidreinforceplugin.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 import java.io.File
+import java.util.*
 
 /**
  * 加固任务.
@@ -103,7 +104,7 @@ open class AndroidReinforceTask : DefaultTask() {
         }
         // 找到apk执行加固
         applicationVariants?.filter {
-            val fName = it.flavorName.toLowerCase()
+            val fName = it.flavorName.toLowerCase(Locale.getDefault())
             !isQuery || KEYWORDS_360.any { k -> fName.contains(k) }
         }?.forEach { appVariant ->
             // 获取签名信息.
@@ -181,7 +182,7 @@ open class AndroidReinforceTask : DefaultTask() {
 
         // 找到apk加固
         applicationVariants?.filter {
-            val fName = it.flavorName.toLowerCase()
+            val fName = it.flavorName.toLowerCase(Locale.getDefault())
             !isQuery || KEYWORDS_LE.any { k -> fName.contains(k) }
         }?.forEach { appVariant ->
             // 获取签名信息.
@@ -218,33 +219,33 @@ open class AndroidReinforceTask : DefaultTask() {
                             project.getLocalProperty("sdk.dir")
                         ).checkNull("缺少android sdk环境变量")
                         // 编译工具
-                        val buildToolPath = File("$androidHome/build-tools").listFiles().last().absolutePath
+                        val buildToolPath = File(androidHome, "build-tools").listFiles()?.last()?.absolutePath
                         // 签名工具路径
-                        val signerPath = "$buildToolPath/apksigner"
+                        val signerPath = File(buildToolPath, if (isWindowOs) "apksigner.bat" else "apksigner").absolutePath
                         // 对齐工具路径
-                        val zipalignPath = "$buildToolPath/zipalign"
+                        val zipalignPath = File(buildToolPath, if (isWindowOs) "zipalign.exe" else "zipalign").absolutePath
                         val apkFileName = apkFile.nameWithoutExtension
-                        val leFilePath = "$outApkPath/${apkFileName}_legu.apk"
-                        val leSignedFilePath = "$outApkPath/${apkFileName}_le_signed.apk"
-                        val zipFilePath = "$outApkPath/${apkFileName}_le_align.apk"
+                        val leFile = File(outApkPath, "${apkFileName}_legu.apk")
+                        val leSignedFile = File(outApkPath, "${apkFileName}_le_signed.apk")
+                        val zipFile = File(outApkPath, "${apkFileName}_le_align.apk")
 
                         // 删除存在文件.
-                        zipFilePath.deleteFile()
-                        leSignedFilePath.deleteFile()
+                        zipFile.delete()
+                        leSignedFile.delete()
 
                         log("------ 开始压缩对齐 ------")
-                        "$zipalignPath -v 4 $leFilePath $zipFilePath".doCommand()
+                        "$zipalignPath -v 4 ${leFile.absolutePath} ${zipFile.absolutePath}".doCommand()
                         log("------ 开始签名 ------")
-                        "$signerPath sign --ks $storePath --ks-pass pass:$storePassword --ks-key-alias $keyAlias --key-pass pass:$keyPass $zipFilePath".doCommand()
+                        "$signerPath sign --ks $storePath --ks-pass pass:$storePassword --ks-key-alias $keyAlias --key-pass pass:$keyPass ${zipFile.absolutePath}".doCommand()
                         log("------ 完成签名 ------")
 
                         // 重新命名该文件
-                        File(zipFilePath).renameTo(File(leSignedFilePath))
+                        zipFile.renameTo(leSignedFile)
 
                         // 删除中间文件
-                        leFilePath.deleteFile()
-                        zipFilePath.deleteFile()
-                        log("apk路径：$leSignedFilePath")
+                        leFile.delete()
+                        zipFile.delete()
+                        log("apk路径：${leSignedFile.absolutePath}")
                     }
                 } ?: log("没有找到需要乐固加固的apk: ${appVariant.flavorName}")
         } ?: log("没有找到需要乐固加固的apk")
