@@ -119,6 +119,6 @@ fun Project.getLocalProperty(key: String, default: String = ""): String =
 fun String.deleteFile() {
     val file = File(this)
     if (file.exists()) {
-        file.delete()
+        file.deleteRecursively()
     }
 }

@@ -45,6 +45,10 @@ class Plugin : Plugin<Project> {
      * @param target Project
      */
     private fun applyTask(target: Project) {
-        target.tasks.findByPath("assembleRelease")?.finalizedBy("androidReinforce")
+        // 遍历任务
+        target.tasks.filter { it.name.contains("assemble(.*)Release".toRegex()) }
+            .forEach {
+                it.finalizedBy("androidReinforce")
+            }
     }
 }
